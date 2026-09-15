@@ -1,0 +1,102 @@
+openapi: 3.1.0
+info:
+  title: Ordovex incidents schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    IncidentPackId:
+      type: string
+      pattern: '^inc_[0-9A-HJKMNP-TV-Z]{26}$'
+    StrategyId:
+      type: string
+      pattern: '^str_[0-9A-HJKMNP-TV-Z]{26}$'
+    IncidentPackStatus:
+      type: string
+      enum: [generating, ready, failed]
+    TimelineEvent:
+      type: object
+      required: [at, kind, summary]
+      properties:
+        at:
+          type: string
+          format: date-time
+        kind:
+          type: string
+        summary:
+          type: string
+        omsCorrelationId:
+          type: string
+    IncidentPack:
+      type: object
+      required: [incidentPackId, strategyId, status, createdAt]
+      properties:
+        incidentPackId:
+          $ref: '#/components/schemas/IncidentPackId'
+        strategyId:
+          $ref: '#/components/schemas/StrategyId'
+        from:
+          type: string
+          format: date-time
+        to:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/IncidentPackStatus'
+        timeline:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimelineEvent'
+        downloadUrl:
+          type: string
+          format: uri
+        exportHash:
+          type: string
+        missingTelemetrySlices:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    IncidentPackCreate:
+      type: object
+      required: [strategyId]
+      properties:
+        strategyId:
+          $ref: '#/components/schemas/StrategyId'
+        from:
+          type: string
+          format: date-time
+        to:
+          type: string
+          format: date-time
+    IncidentPackResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/IncidentPack'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    IncidentPackListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/IncidentPack'
+        nextCursor:
+          type: string
+    IncidentPackListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/IncidentPackListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

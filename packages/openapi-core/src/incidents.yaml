@@ -1,0 +1,121 @@
+openapi: 3.1.0
+info:
+  title: Ordovex Incidents API
+  version: 0.1.0
+  description: Incident reconstruction packs for regulators and insurers (BR-7, BR-12).
+  x-domain: inc
+  license:
+    name: Proprietary
+servers:
+  - url: https://api.ordovex.local
+security:
+  - apiKey: []
+  - bearerAuth: []
+tags:
+  - name: Incidents
+paths:
+  /v1/incidents/packs:
+    get:
+      operationId: listIncidentPacks
+      tags: [Incidents]
+      x-repository: IncidentPack
+      x-dynamodb:
+        entityType: INCIDENT_PACK
+        pkPatternTemplate: "INCIDENT#${incidentPackId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+        filterFields: [strategyId, status]
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: strategyId
+          in: query
+          schema:
+            $ref: ./incidents.schemas.yaml#/components/schemas/StrategyId
+      responses:
+        '200':
+          description: Packs
+          content:
+            application/json:
+              schema:
+                $ref: ./incidents.schemas.yaml#/components/schemas/IncidentPackListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: createIncidentPack
+      tags: [Incidents]
+      x-repository: IncidentPack
+      x-dynamodb:
+        entityType: INCIDENT_PACK
+        pkPatternTemplate: "INCIDENT#${incidentPackId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./incidents.schemas.yaml#/components/schemas/IncidentPackCreate
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: ./incidents.schemas.yaml#/components/schemas/IncidentPackResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/incidents/packs/{incidentPackId}:
+    get:
+      operationId: getIncidentPack
+      tags: [Incidents]
+      x-repository: IncidentPack
+      x-dynamodb:
+        entityType: INCIDENT_PACK
+        pkPatternTemplate: "INCIDENT#${incidentPackId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: incidentPackId
+          in: path
+          required: true
+          schema:
+            $ref: ./incidents.schemas.yaml#/components/schemas/IncidentPackId
+      responses:
+        '200':
+          description: Pack
+          content:
+            application/json:
+              schema:
+                $ref: ./incidents.schemas.yaml#/components/schemas/IncidentPackResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey
+    bearerAuth:
+      $ref: ./common/security.yaml#/components/securitySchemes/bearerAuth

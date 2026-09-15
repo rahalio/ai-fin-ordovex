@@ -1,0 +1,166 @@
+openapi: 3.1.0
+info:
+  title: Ordovex Kills API
+  version: 0.1.0
+  description: Kill-switch orchestration and restart authorisation (BR-3, BR-7, BR-10).
+  x-domain: kil
+  license:
+    name: Proprietary
+servers:
+  - url: https://api.ordovex.local
+security:
+  - apiKey: []
+  - bearerAuth: []
+tags:
+  - name: Kills
+paths:
+  /v1/kills:
+    get:
+      operationId: listKillOrders
+      tags: [Kills]
+      x-repository: KillOrder
+      x-dynamodb:
+        entityType: KILL_ORDER
+        pkPatternTemplate: "KILL#${killOrderId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+        filterFields: [scope, status, targetId]
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: scope
+          in: query
+          schema:
+            $ref: ./kills.schemas.yaml#/components/schemas/KillScope
+        - name: targetId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Kill orders
+          content:
+            application/json:
+              schema:
+                $ref: ./kills.schemas.yaml#/components/schemas/KillOrderListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: issueKillOrder
+      tags: [Kills]
+      summary: Issue kill without dual-control delay (BR-3, BR-10)
+      x-repository: KillOrder
+      x-dynamodb:
+        entityType: KILL_ORDER
+        pkPatternTemplate: "KILL#${killOrderId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./kills.schemas.yaml#/components/schemas/KillOrderCreate
+      responses:
+        '201':
+          description: Issued
+          content:
+            application/json:
+              schema:
+                $ref: ./kills.schemas.yaml#/components/schemas/KillOrderResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/kills/{killOrderId}:
+    get:
+      operationId: getKillOrder
+      tags: [Kills]
+      x-repository: KillOrder
+      x-dynamodb:
+        entityType: KILL_ORDER
+        pkPatternTemplate: "KILL#${killOrderId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: killOrderId
+          in: path
+          required: true
+          schema:
+            $ref: ./kills.schemas.yaml#/components/schemas/KillOrderId
+      responses:
+        '200':
+          description: Kill order
+          content:
+            application/json:
+              schema:
+                $ref: ./kills.schemas.yaml#/components/schemas/KillOrderResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/kills/{killOrderId}/restart:
+    post:
+      operationId: authoriseRestart
+      tags: [Kills]
+      summary: Dual-control restart after kill
+      x-repository: RestartAuthorisation
+      x-dynamodb:
+        entityType: RESTART_AUTH
+        pkPatternTemplate: "RESTART#${restartAuthId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: killOrderId
+          in: path
+          required: true
+          schema:
+            $ref: ./kills.schemas.yaml#/components/schemas/KillOrderId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: ./kills.schemas.yaml#/components/schemas/RestartAuthCreate
+      responses:
+        '201':
+          description: Restart authorised request
+          content:
+            application/json:
+              schema:
+                $ref: ./kills.schemas.yaml#/components/schemas/RestartAuthResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey
+    bearerAuth:
+      $ref: ./common/security.yaml#/components/securitySchemes/bearerAuth

@@ -1,0 +1,232 @@
+openapi: 3.1.0
+info:
+  title: Ordovex Limits API
+  version: 0.1.0
+  description: Hierarchical limit packages with dual-control raises and MM skew (BR-2, BR-6, BR-10).
+  x-domain: lim
+  license:
+    name: Proprietary
+servers:
+  - url: https://api.ordovex.local
+security:
+  - apiKey: []
+  - bearerAuth: []
+tags:
+  - name: Limits
+paths:
+  /v1/limits:
+    get:
+      operationId: listLimitPackages
+      tags: [Limits]
+      x-repository: LimitPackage
+      x-dynamodb:
+        entityType: LIMIT_PACKAGE
+        pkPatternTemplate: "LIMIT#${limitPackageId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+        filterFields: [hierarchyLevel, strategyId, deskId]
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: hierarchyLevel
+          in: query
+          schema:
+            $ref: ./limits.schemas.yaml#/components/schemas/HierarchyLevel
+        - name: strategyId
+          in: query
+          schema:
+            $ref: ./limits.schemas.yaml#/components/schemas/StrategyId
+      responses:
+        '200':
+          description: Limit packages
+          content:
+            application/json:
+              schema:
+                $ref: ./limits.schemas.yaml#/components/schemas/LimitPackageListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    put:
+      operationId: upsertLimitPackage
+      tags: [Limits]
+      summary: Tighten or set limits (raises use dual-control propose)
+      x-repository: LimitPackage
+      x-dynamodb:
+        entityType: LIMIT_PACKAGE
+        pkPatternTemplate: "LIMIT#${limitPackageId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./limits.schemas.yaml#/components/schemas/LimitPackageUpsert
+      responses:
+        '200':
+          description: Upserted
+          content:
+            application/json:
+              schema:
+                $ref: ./limits.schemas.yaml#/components/schemas/LimitPackageResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/limits/{limitPackageId}:
+    get:
+      operationId: getLimitPackage
+      tags: [Limits]
+      x-repository: LimitPackage
+      x-dynamodb:
+        entityType: LIMIT_PACKAGE
+        pkPatternTemplate: "LIMIT#${limitPackageId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: limitPackageId
+          in: path
+          required: true
+          schema:
+            $ref: ./limits.schemas.yaml#/components/schemas/LimitPackageId
+      responses:
+        '200':
+          description: Package
+          content:
+            application/json:
+              schema:
+                $ref: ./limits.schemas.yaml#/components/schemas/LimitPackageResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/limits/raises:
+    post:
+      operationId: proposeLimitRaise
+      tags: [Limits]
+      summary: Propose a limit raise requiring dual control (BR-10)
+      x-repository: LimitRaiseProposal
+      x-dynamodb:
+        entityType: LIMIT_RAISE
+        pkPatternTemplate: "LIMITRAISE#${limitRaiseId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./limits.schemas.yaml#/components/schemas/LimitRaiseCreate
+      responses:
+        '201':
+          description: Proposed
+          content:
+            application/json:
+              schema:
+                $ref: ./limits.schemas.yaml#/components/schemas/LimitRaiseResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/limits/raises/{limitRaiseId}/approve:
+    post:
+      operationId: approveLimitRaise
+      tags: [Limits]
+      x-repository: LimitRaiseProposal
+      x-dynamodb:
+        entityType: LIMIT_RAISE
+        pkPatternTemplate: "LIMITRAISE#${limitRaiseId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: limitRaiseId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^lir_[0-9A-HJKMNP-TV-Z]{26}$'
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      responses:
+        '200':
+          description: Approved
+          content:
+            application/json:
+              schema:
+                $ref: ./limits.schemas.yaml#/components/schemas/LimitRaiseResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/limits/simulate-tightest:
+    get:
+      operationId: simulateTightestWins
+      tags: [Limits]
+      x-repository: TightestWinsSimulation
+      x-dynamodb:
+        entityType: TIGHTEST_WINS
+        pkPatternTemplate: "SIM#${strategyId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: strategyId
+          in: query
+          required: true
+          schema:
+            $ref: ./limits.schemas.yaml#/components/schemas/StrategyId
+        - name: symbol
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Effective tightest limits
+          content:
+            application/json:
+              schema:
+                $ref: ./limits.schemas.yaml#/components/schemas/TightestWinsResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey
+    bearerAuth:
+      $ref: ./common/security.yaml#/components/securitySchemes/bearerAuth

@@ -1,0 +1,98 @@
+openapi: 3.1.0
+info:
+  title: Ordovex pretrade schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    OrderIntentCheckId:
+      type: string
+      pattern: '^prt_[0-9A-HJKMNP-TV-Z]{26}$'
+    StrategyId:
+      type: string
+      pattern: '^str_[0-9A-HJKMNP-TV-Z]{26}$'
+    ModelVersionId:
+      type: string
+      pattern: '^mdl_[0-9A-HJKMNP-TV-Z]{26}$'
+    Side:
+      type: string
+      enum: [buy, sell]
+    CheckResult:
+      type: string
+      enum: [allow, reject]
+    OrderIntentCheck:
+      type: object
+      required: [orderIntentCheckId, strategyId, symbol, side, qty, result, createdAt]
+      properties:
+        orderIntentCheckId:
+          $ref: '#/components/schemas/OrderIntentCheckId'
+        strategyId:
+          $ref: '#/components/schemas/StrategyId'
+        modelVersionId:
+          $ref: '#/components/schemas/ModelVersionId'
+        symbol:
+          type: string
+        side:
+          $ref: '#/components/schemas/Side'
+        qty:
+          type: number
+        price:
+          type: number
+        result:
+          $ref: '#/components/schemas/CheckResult'
+        reasons:
+          type: array
+          items:
+            type: string
+        envelopeRuleHit:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    OrderIntentCheckRequest:
+      type: object
+      required: [strategyId, symbol, side, qty]
+      properties:
+        strategyId:
+          $ref: '#/components/schemas/StrategyId'
+        modelVersionId:
+          $ref: '#/components/schemas/ModelVersionId'
+        symbol:
+          type: string
+        side:
+          $ref: '#/components/schemas/Side'
+        qty:
+          type: number
+        price:
+          type: number
+        omsCorrelationId:
+          type: string
+    OrderIntentCheckResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/OrderIntentCheck'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    OrderIntentCheckListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderIntentCheck'
+        nextCursor:
+          type: string
+    OrderIntentCheckListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/OrderIntentCheckListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

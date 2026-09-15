@@ -1,0 +1,148 @@
+openapi: 3.1.0
+info:
+  title: Ordovex telemetry schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    TelemetrySnapshotId:
+      type: string
+      pattern: '^tlm_[0-9A-HJKMNP-TV-Z]{26}$'
+    BreachActionId:
+      type: string
+      pattern: '^brc_[0-9A-HJKMNP-TV-Z]{26}$'
+    StrategyId:
+      type: string
+      pattern: '^str_[0-9A-HJKMNP-TV-Z]{26}$'
+    BreachKind:
+      type: string
+      enum: [drawdown, message_rate, max_loss, inventory_skew]
+    BreachActionType:
+      type: string
+      enum: [throttle, kill, alert]
+    TelemetrySnapshot:
+      type: object
+      required: [telemetrySnapshotId, strategyId, pnl, drawdown, messageRate, observedAt, createdAt]
+      properties:
+        telemetrySnapshotId:
+          $ref: '#/components/schemas/TelemetrySnapshotId'
+        strategyId:
+          $ref: '#/components/schemas/StrategyId'
+        pnl:
+          type: number
+        drawdown:
+          type: number
+        messageRate:
+          type: integer
+        inventorySkew:
+          type: number
+        observedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    TelemetrySnapshotCreate:
+      type: object
+      required: [strategyId, pnl, drawdown, messageRate]
+      properties:
+        strategyId:
+          $ref: '#/components/schemas/StrategyId'
+        pnl:
+          type: number
+        drawdown:
+          type: number
+        messageRate:
+          type: integer
+        inventorySkew:
+          type: number
+        observedAt:
+          type: string
+          format: date-time
+    BreachAction:
+      type: object
+      required: [breachActionId, strategyId, kind, action, status, createdAt]
+      properties:
+        breachActionId:
+          $ref: '#/components/schemas/BreachActionId'
+        strategyId:
+          $ref: '#/components/schemas/StrategyId'
+        kind:
+          $ref: '#/components/schemas/BreachKind'
+        action:
+          $ref: '#/components/schemas/BreachActionType'
+        thresholdValue:
+          type: number
+        observedValue:
+          type: number
+        status:
+          type: string
+          enum: [triggered, acknowledged, cleared]
+        acknowledgedBy:
+          $ref: ./common/primitives.yaml#/components/schemas/UserId
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    BreachAcknowledge:
+      type: object
+      properties:
+        notes:
+          type: string
+    TelemetrySnapshotResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/TelemetrySnapshot'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    TelemetrySnapshotListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TelemetrySnapshot'
+        nextCursor:
+          type: string
+    TelemetrySnapshotListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/TelemetrySnapshotListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    BreachActionResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/BreachAction'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    BreachActionListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BreachAction'
+        nextCursor:
+          type: string
+    BreachActionListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/BreachActionListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

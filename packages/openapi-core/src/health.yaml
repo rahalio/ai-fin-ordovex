@@ -1,0 +1,75 @@
+openapi: 3.1.0
+info:
+  title: Ordovex Health API
+  version: 0.1.0
+  description: Control-plane latency and kill API health for SRE (desk home banners).
+  x-domain: hlt
+  license:
+    name: Proprietary
+servers:
+  - url: https://api.ordovex.local
+security:
+  - apiKey: []
+  - bearerAuth: []
+tags:
+  - name: Health
+paths:
+  /v1/health/control-plane:
+    get:
+      operationId: getControlPlaneHealth
+      tags: [Health]
+      x-repository: ControlPlaneHealth
+      x-dynamodb:
+        entityType: CONTROL_PLANE_HEALTH
+        pkPatternTemplate: "HEALTH#CONTROL"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      responses:
+        '200':
+          description: Control plane health
+          content:
+            application/json:
+              schema:
+                $ref: ./health.schemas.yaml#/components/schemas/ControlPlaneHealthResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/health/gateways:
+    get:
+      operationId: listGatewayHeartbeats
+      tags: [Health]
+      x-repository: GatewayHeartbeat
+      x-dynamodb:
+        entityType: GATEWAY_HEARTBEAT
+        pkPatternTemplate: "HEALTH#GW#${gatewayId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+      responses:
+        '200':
+          description: Gateway heartbeats
+          content:
+            application/json:
+              schema:
+                $ref: ./health.schemas.yaml#/components/schemas/GatewayHeartbeatListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey
+    bearerAuth:
+      $ref: ./common/security.yaml#/components/securitySchemes/bearerAuth

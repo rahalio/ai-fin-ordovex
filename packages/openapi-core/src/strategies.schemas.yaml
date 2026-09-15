@@ -1,0 +1,189 @@
+openapi: 3.1.0
+info:
+  title: Ordovex strategies schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    StrategyId:
+      type: string
+      pattern: '^str_[0-9A-HJKMNP-TV-Z]{26}$'
+    ModelVersionId:
+      type: string
+      pattern: '^mdl_[0-9A-HJKMNP-TV-Z]{26}$'
+    DeskId:
+      type: string
+    StrategyKind:
+      type: string
+      enum: [ai_overlay, market_making, execution_algo]
+    StrategyStatus:
+      type: string
+      enum: [draft, certified, killed, live]
+    TradingStrategy:
+      type: object
+      required: [strategyId, name, deskId, kind, status, createdAt]
+      properties:
+        strategyId:
+          $ref: '#/components/schemas/StrategyId'
+        name:
+          type: string
+        deskId:
+          $ref: '#/components/schemas/DeskId'
+        markets:
+          type: array
+          items:
+            type: string
+        kind:
+          $ref: '#/components/schemas/StrategyKind'
+        status:
+          $ref: '#/components/schemas/StrategyStatus'
+        liveModelVersionId:
+          $ref: '#/components/schemas/ModelVersionId'
+        ownerUserId:
+          $ref: ./common/primitives.yaml#/components/schemas/UserId
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    TradingStrategyCreate:
+      type: object
+      required: [name, deskId, kind]
+      properties:
+        name:
+          type: string
+        deskId:
+          $ref: '#/components/schemas/DeskId'
+        markets:
+          type: array
+          items:
+            type: string
+        kind:
+          $ref: '#/components/schemas/StrategyKind'
+        ownerUserId:
+          $ref: ./common/primitives.yaml#/components/schemas/UserId
+    ModelVersionStatus:
+      type: string
+      enum: [draft, submitted, certified, rejected, rolled_back]
+    ModelVersion:
+      type: object
+      required: [modelVersionId, strategyId, versionLabel, status, createdAt]
+      properties:
+        modelVersionId:
+          $ref: '#/components/schemas/ModelVersionId'
+        strategyId:
+          $ref: '#/components/schemas/StrategyId'
+        versionLabel:
+          type: string
+        status:
+          $ref: '#/components/schemas/ModelVersionStatus'
+        simulationEvidenceUri:
+          type: string
+          format: uri
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ModelVersionCreate:
+      type: object
+      required: [strategyId, versionLabel]
+      properties:
+        strategyId:
+          $ref: '#/components/schemas/StrategyId'
+        versionLabel:
+          type: string
+        simulationEvidenceUri:
+          type: string
+          format: uri
+        notes:
+          type: string
+    LiveBinding:
+      type: object
+      required: [strategyId, modelVersionId, boundAt]
+      properties:
+        strategyId:
+          $ref: '#/components/schemas/StrategyId'
+        modelVersionId:
+          $ref: '#/components/schemas/ModelVersionId'
+        boundAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    RollbackRequest:
+      type: object
+      required: [targetModelVersionId]
+      properties:
+        targetModelVersionId:
+          $ref: '#/components/schemas/ModelVersionId'
+        reason:
+          type: string
+    TradingStrategyResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/TradingStrategy'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    TradingStrategyListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TradingStrategy'
+        nextCursor:
+          type: string
+    TradingStrategyListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/TradingStrategyListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    ModelVersionResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/ModelVersion'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    ModelVersionListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModelVersion'
+        nextCursor:
+          type: string
+    ModelVersionListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/ModelVersionListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    LiveBindingResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/LiveBinding'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

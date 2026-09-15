@@ -1,0 +1,10 @@
+---
+description: Never commit or push the .codegen directory
+alwaysApply: true
+---
+
+# Never commit `.codegen`
+
+- Do not `git add`, commit, or push `.codegen/` (the local `zero-codegen` tool and merged config).
+- `.codegen/` is listed in `.gitignore`. Do not force-add it (`-f`) or remove that ignore rule.
+- If codegen files appear in `git status`, unstage them. Copy the tool from the scaffold locally when needed; do not vendor it on GitHub.

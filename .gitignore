@@ -1,21 +1,27 @@
 node_modules/
-.next/
 dist/
+.next/
+coverage/
 build/
 out/
-coverage/
-.turbo/
 .cache/
-*.log
+*.tsbuildinfo
 .DS_Store
 .env
 .env.*
 !.env.example
 *.pem
 .venv/
-__pycache__/
+packages/openapi-core/src/.bundled/
+**/node_modules/
+**/__pycache__/
+*.pyc
+test-results/
+playwright-report/
+*.log
+.turbo/
 
-# Codegen — do not push
+# Codegen tool — never commit or push
 .codegen/
 codegen/
 **/zero_codegen/

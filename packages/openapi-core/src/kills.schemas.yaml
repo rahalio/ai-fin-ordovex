@@ -1,0 +1,127 @@
+openapi: 3.1.0
+info:
+  title: Ordovex kills schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    KillOrderId:
+      type: string
+      pattern: '^kil_[0-9A-HJKMNP-TV-Z]{26}$'
+    RestartAuthId:
+      type: string
+      pattern: '^rsa_[0-9A-HJKMNP-TV-Z]{26}$'
+    KillScope:
+      type: string
+      enum: [strategy, desk, firm]
+    KillStatus:
+      type: string
+      enum: [issued, completing, completed, failed]
+    KillOrder:
+      type: object
+      required: [killOrderId, scope, targetId, status, reason, issuedAt, createdAt]
+      properties:
+        killOrderId:
+          $ref: '#/components/schemas/KillOrderId'
+        scope:
+          $ref: '#/components/schemas/KillScope'
+        targetId:
+          type: string
+        cancelWorking:
+          type: boolean
+        reason:
+          type: string
+        status:
+          $ref: '#/components/schemas/KillStatus'
+        issuedBy:
+          $ref: ./common/primitives.yaml#/components/schemas/UserId
+        slaMs:
+          type: integer
+        completedAt:
+          type: string
+          format: date-time
+        issuedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    KillOrderCreate:
+      type: object
+      required: [scope, targetId, reason]
+      properties:
+        scope:
+          $ref: '#/components/schemas/KillScope'
+        targetId:
+          type: string
+        cancelWorking:
+          type: boolean
+          default: true
+        reason:
+          type: string
+    RestartAuthorisation:
+      type: object
+      required: [restartAuthId, killOrderId, status, createdAt]
+      properties:
+        restartAuthId:
+          $ref: '#/components/schemas/RestartAuthId'
+        killOrderId:
+          $ref: '#/components/schemas/KillOrderId'
+        status:
+          type: string
+          enum: [pending, authorised, denied]
+        authorisedBy:
+          $ref: ./common/primitives.yaml#/components/schemas/UserId
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    RestartAuthCreate:
+      type: object
+      required: [killOrderId]
+      properties:
+        killOrderId:
+          $ref: '#/components/schemas/KillOrderId'
+        notes:
+          type: string
+    KillOrderResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/KillOrder'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    KillOrderListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/KillOrder'
+        nextCursor:
+          type: string
+    KillOrderListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/KillOrderListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    RestartAuthResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/RestartAuthorisation'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

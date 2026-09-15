@@ -1,0 +1,166 @@
+openapi: 3.1.0
+info:
+  title: Ordovex Certifications API
+  version: 0.1.0
+  description: Strategy certification workflow with evidence and risk class (BR-4).
+  x-domain: crt
+  license:
+    name: Proprietary
+servers:
+  - url: https://api.ordovex.local
+security:
+  - apiKey: []
+  - bearerAuth: []
+tags:
+  - name: Certifications
+paths:
+  /v1/certifications:
+    get:
+      operationId: listCertifications
+      tags: [Certifications]
+      x-repository: Certification
+      x-dynamodb:
+        entityType: CERTIFICATION
+        pkPatternTemplate: "CERT#${certificationId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+        filterFields: [status, strategyId, riskClass]
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: status
+          in: query
+          schema:
+            $ref: ./certifications.schemas.yaml#/components/schemas/CertificationStatus
+        - name: strategyId
+          in: query
+          schema:
+            $ref: ./certifications.schemas.yaml#/components/schemas/StrategyId
+      responses:
+        '200':
+          description: Certifications
+          content:
+            application/json:
+              schema:
+                $ref: ./certifications.schemas.yaml#/components/schemas/CertificationListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: submitCertification
+      tags: [Certifications]
+      x-repository: Certification
+      x-dynamodb:
+        entityType: CERTIFICATION
+        pkPatternTemplate: "CERT#${certificationId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./certifications.schemas.yaml#/components/schemas/CertificationCreate
+      responses:
+        '201':
+          description: Submitted
+          content:
+            application/json:
+              schema:
+                $ref: ./certifications.schemas.yaml#/components/schemas/CertificationResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/certifications/{certificationId}:
+    get:
+      operationId: getCertification
+      tags: [Certifications]
+      x-repository: Certification
+      x-dynamodb:
+        entityType: CERTIFICATION
+        pkPatternTemplate: "CERT#${certificationId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: certificationId
+          in: path
+          required: true
+          schema:
+            $ref: ./certifications.schemas.yaml#/components/schemas/CertificationId
+      responses:
+        '200':
+          description: Certification
+          content:
+            application/json:
+              schema:
+                $ref: ./certifications.schemas.yaml#/components/schemas/CertificationResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/certifications/{certificationId}/decide:
+    post:
+      operationId: decideCertification
+      tags: [Certifications]
+      summary: Approve or reject with reasons
+      x-repository: Certification
+      x-dynamodb:
+        entityType: CERTIFICATION
+        pkPatternTemplate: "CERT#${certificationId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: certificationId
+          in: path
+          required: true
+          schema:
+            $ref: ./certifications.schemas.yaml#/components/schemas/CertificationId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./certifications.schemas.yaml#/components/schemas/CertificationDecision
+      responses:
+        '200':
+          description: Decided
+          content:
+            application/json:
+              schema:
+                $ref: ./certifications.schemas.yaml#/components/schemas/CertificationResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey
+    bearerAuth:
+      $ref: ./common/security.yaml#/components/securitySchemes/bearerAuth

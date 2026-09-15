@@ -1,0 +1,309 @@
+openapi: 3.1.0
+info:
+  title: Ordovex Strategies API
+  version: 0.1.0
+  description: Strategy and model version registry with live binding and rollback (BR-1, BR-8).
+  x-domain: str
+  license:
+    name: Proprietary
+servers:
+  - url: https://api.ordovex.local
+security:
+  - apiKey: []
+  - bearerAuth: []
+tags:
+  - name: Strategies
+  - name: ModelVersions
+  - name: LiveBindings
+paths:
+  /v1/strategies:
+    get:
+      operationId: listTradingStrategies
+      tags: [Strategies]
+      x-repository: TradingStrategy
+      x-dynamodb:
+        entityType: TRADING_STRATEGY
+        pkPatternTemplate: "STRATEGY#${strategyId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+        filterFields: [deskId, status, kind]
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: deskId
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            $ref: ./strategies.schemas.yaml#/components/schemas/StrategyStatus
+      responses:
+        '200':
+          description: Strategies
+          content:
+            application/json:
+              schema:
+                $ref: ./strategies.schemas.yaml#/components/schemas/TradingStrategyListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: createTradingStrategy
+      tags: [Strategies]
+      x-repository: TradingStrategy
+      x-dynamodb:
+        entityType: TRADING_STRATEGY
+        pkPatternTemplate: "STRATEGY#${strategyId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./strategies.schemas.yaml#/components/schemas/TradingStrategyCreate
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: ./strategies.schemas.yaml#/components/schemas/TradingStrategyResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/strategies/{strategyId}:
+    get:
+      operationId: getTradingStrategy
+      tags: [Strategies]
+      x-repository: TradingStrategy
+      x-dynamodb:
+        entityType: TRADING_STRATEGY
+        pkPatternTemplate: "STRATEGY#${strategyId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: strategyId
+          in: path
+          required: true
+          schema:
+            $ref: ./strategies.schemas.yaml#/components/schemas/StrategyId
+      responses:
+        '200':
+          description: Strategy
+          content:
+            application/json:
+              schema:
+                $ref: ./strategies.schemas.yaml#/components/schemas/TradingStrategyResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/strategies/{strategyId}/versions:
+    get:
+      operationId: listModelVersions
+      tags: [ModelVersions]
+      x-repository: ModelVersion
+      x-dynamodb:
+        entityType: MODEL_VERSION
+        pkPatternTemplate: "STRATEGY#${strategyId}"
+        skPatternTemplate: "VERSION#${modelVersionId}"
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+        filterFields: [status]
+      parameters:
+        - name: strategyId
+          in: path
+          required: true
+          schema:
+            $ref: ./strategies.schemas.yaml#/components/schemas/StrategyId
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+      responses:
+        '200':
+          description: Versions
+          content:
+            application/json:
+              schema:
+                $ref: ./strategies.schemas.yaml#/components/schemas/ModelVersionListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: submitModelVersion
+      tags: [ModelVersions]
+      x-repository: ModelVersion
+      x-dynamodb:
+        entityType: MODEL_VERSION
+        pkPatternTemplate: "STRATEGY#${strategyId}"
+        skPatternTemplate: "VERSION#${modelVersionId}"
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: strategyId
+          in: path
+          required: true
+          schema:
+            $ref: ./strategies.schemas.yaml#/components/schemas/StrategyId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./strategies.schemas.yaml#/components/schemas/ModelVersionCreate
+      responses:
+        '201':
+          description: Submitted
+          content:
+            application/json:
+              schema:
+                $ref: ./strategies.schemas.yaml#/components/schemas/ModelVersionResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/strategies/{strategyId}/versions/{modelVersionId}:
+    get:
+      operationId: getModelVersion
+      tags: [ModelVersions]
+      x-repository: ModelVersion
+      x-dynamodb:
+        entityType: MODEL_VERSION
+        pkPatternTemplate: "STRATEGY#${strategyId}"
+        skPatternTemplate: "VERSION#${modelVersionId}"
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: strategyId
+          in: path
+          required: true
+          schema:
+            $ref: ./strategies.schemas.yaml#/components/schemas/StrategyId
+        - name: modelVersionId
+          in: path
+          required: true
+          schema:
+            $ref: ./strategies.schemas.yaml#/components/schemas/ModelVersionId
+      responses:
+        '200':
+          description: Version
+          content:
+            application/json:
+              schema:
+                $ref: ./strategies.schemas.yaml#/components/schemas/ModelVersionResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/strategies/{strategyId}/live-binding:
+    get:
+      operationId: getLiveBinding
+      tags: [LiveBindings]
+      x-repository: LiveBinding
+      x-dynamodb:
+        entityType: LIVE_BINDING
+        pkPatternTemplate: "STRATEGY#${strategyId}"
+        skPatternTemplate: LIVE
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: strategyId
+          in: path
+          required: true
+          schema:
+            $ref: ./strategies.schemas.yaml#/components/schemas/StrategyId
+      responses:
+        '200':
+          description: Live binding
+          content:
+            application/json:
+              schema:
+                $ref: ./strategies.schemas.yaml#/components/schemas/LiveBindingResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    post:
+      operationId: rollbackLiveBinding
+      tags: [LiveBindings]
+      summary: One-action model version rollback (BR-8)
+      x-repository: LiveBinding
+      x-dynamodb:
+        entityType: LIVE_BINDING
+        pkPatternTemplate: "STRATEGY#${strategyId}"
+        skPatternTemplate: LIVE
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: strategyId
+          in: path
+          required: true
+          schema:
+            $ref: ./strategies.schemas.yaml#/components/schemas/StrategyId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./strategies.schemas.yaml#/components/schemas/RollbackRequest
+      responses:
+        '200':
+          description: Rolled back
+          content:
+            application/json:
+              schema:
+                $ref: ./strategies.schemas.yaml#/components/schemas/LiveBindingResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey
+    bearerAuth:
+      $ref: ./common/security.yaml#/components/securitySchemes/bearerAuth

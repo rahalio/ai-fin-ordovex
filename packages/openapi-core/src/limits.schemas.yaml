@@ -1,0 +1,169 @@
+openapi: 3.1.0
+info:
+  title: Ordovex limits schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    LimitPackageId:
+      type: string
+      pattern: '^lim_[0-9A-HJKMNP-TV-Z]{26}$'
+    StrategyId:
+      type: string
+      pattern: '^str_[0-9A-HJKMNP-TV-Z]{26}$'
+    HierarchyLevel:
+      type: string
+      enum: [firm, desk, strategy, symbol]
+    LimitRaiseStatus:
+      type: string
+      enum: [proposed, approved, rejected, applied]
+    LimitPackage:
+      type: object
+      required: [limitPackageId, hierarchyLevel, maxLoss, createdAt]
+      properties:
+        limitPackageId:
+          $ref: '#/components/schemas/LimitPackageId'
+        strategyId:
+          $ref: '#/components/schemas/StrategyId'
+        deskId:
+          type: string
+        hierarchyLevel:
+          $ref: '#/components/schemas/HierarchyLevel'
+        maxLoss:
+          type: number
+        maxMessageRate:
+          type: integer
+        inventorySkewLimit:
+          type: number
+        quotingObligation:
+          type: string
+        symbol:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    LimitPackageUpsert:
+      type: object
+      required: [hierarchyLevel, maxLoss]
+      properties:
+        strategyId:
+          $ref: '#/components/schemas/StrategyId'
+        deskId:
+          type: string
+        hierarchyLevel:
+          $ref: '#/components/schemas/HierarchyLevel'
+        maxLoss:
+          type: number
+        maxMessageRate:
+          type: integer
+        inventorySkewLimit:
+          type: number
+        quotingObligation:
+          type: string
+        symbol:
+          type: string
+    LimitRaiseProposal:
+      type: object
+      required: [limitRaiseId, limitPackageId, proposedMaxLoss, status, createdAt]
+      properties:
+        limitRaiseId:
+          type: string
+          pattern: '^lir_[0-9A-HJKMNP-TV-Z]{26}$'
+        limitPackageId:
+          $ref: '#/components/schemas/LimitPackageId'
+        proposedMaxLoss:
+          type: number
+        proposedMaxMessageRate:
+          type: integer
+        status:
+          $ref: '#/components/schemas/LimitRaiseStatus'
+        proposedBy:
+          $ref: ./common/primitives.yaml#/components/schemas/UserId
+        approvedBy:
+          $ref: ./common/primitives.yaml#/components/schemas/UserId
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    LimitRaiseCreate:
+      type: object
+      required: [limitPackageId, proposedMaxLoss]
+      properties:
+        limitPackageId:
+          $ref: '#/components/schemas/LimitPackageId'
+        proposedMaxLoss:
+          type: number
+        proposedMaxMessageRate:
+          type: integer
+        reason:
+          type: string
+    TightestWinsSimulation:
+      type: object
+      required: [strategyId, effectiveMaxLoss, winningLevel, generatedAt]
+      properties:
+        strategyId:
+          $ref: '#/components/schemas/StrategyId'
+        symbol:
+          type: string
+        effectiveMaxLoss:
+          type: number
+        effectiveMaxMessageRate:
+          type: integer
+        winningLevel:
+          $ref: '#/components/schemas/HierarchyLevel'
+        generatedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    LimitPackageResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/LimitPackage'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    LimitPackageListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LimitPackage'
+        nextCursor:
+          type: string
+    LimitPackageListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/LimitPackageListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    LimitRaiseResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/LimitRaiseProposal'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    TightestWinsResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/TightestWinsSimulation'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

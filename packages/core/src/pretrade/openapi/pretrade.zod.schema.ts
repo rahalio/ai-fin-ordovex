@@ -1,0 +1,453 @@
+import { makeApi, Zodios, type ZodiosOptions } from '@zodios/core';
+import { z } from 'zod';
+
+const checkOrderIntent_Body = z
+  .object({
+    strategyId: z.string().regex(/^str_[0-9A-HJKMNP-TV-Z]{26}$/),
+    modelVersionId: z
+      .string()
+      .regex(/^mdl_[0-9A-HJKMNP-TV-Z]{26}$/)
+      .optional(),
+    symbol: z.string(),
+    side: z.enum(['buy', 'sell']),
+    qty: z.number(),
+    price: z.number().optional(),
+    omsCorrelationId: z.string().optional(),
+  })
+  .passthrough();
+const StrategyId = z.string();
+const CheckResult = z.enum(['allow', 'reject']);
+const Problem = z
+  .object({
+    type: z.string().url(),
+    title: z.string(),
+    status: z.number().int(),
+    detail: z.string(),
+    instance: z.string().url(),
+    code: z.string(),
+  })
+  .partial()
+  .passthrough();
+const OrderIntentCheckId = z.string();
+const ModelVersionId = z.string();
+const Side = z.enum(['buy', 'sell']);
+const OrderIntentCheck = z
+  .object({
+    orderIntentCheckId: z.string().regex(/^prt_[0-9A-HJKMNP-TV-Z]{26}$/),
+    strategyId: z.string().regex(/^str_[0-9A-HJKMNP-TV-Z]{26}$/),
+    modelVersionId: z
+      .string()
+      .regex(/^mdl_[0-9A-HJKMNP-TV-Z]{26}$/)
+      .optional(),
+    symbol: z.string(),
+    side: z.enum(['buy', 'sell']),
+    qty: z.number(),
+    price: z.number().optional(),
+    result: z.enum(['allow', 'reject']),
+    reasons: z.array(z.string()).optional(),
+    envelopeRuleHit: z.string().optional(),
+    createdAt: z.string().datetime({ offset: true }),
+    updatedAt: z.string().datetime({ offset: true }).optional(),
+  })
+  .passthrough();
+const OrderIntentCheckListData = z
+  .object({
+    items: z.array(
+      z
+        .object({
+          orderIntentCheckId: z.string().regex(/^prt_[0-9A-HJKMNP-TV-Z]{26}$/),
+          strategyId: z.string().regex(/^str_[0-9A-HJKMNP-TV-Z]{26}$/),
+          modelVersionId: z
+            .string()
+            .regex(/^mdl_[0-9A-HJKMNP-TV-Z]{26}$/)
+            .optional(),
+          symbol: z.string(),
+          side: z.enum(['buy', 'sell']),
+          qty: z.number(),
+          price: z.number().optional(),
+          result: z.enum(['allow', 'reject']),
+          reasons: z.array(z.string()).optional(),
+          envelopeRuleHit: z.string().optional(),
+          createdAt: z.string().datetime({ offset: true }),
+          updatedAt: z.string().datetime({ offset: true }).optional(),
+        })
+        .passthrough()
+    ),
+    nextCursor: z.string().optional(),
+  })
+  .passthrough();
+const ResponseMeta = z
+  .object({
+    requestId: z.string().uuid(),
+    correlationId: z.string(),
+    generatedAt: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const OrderIntentCheckListResponse = z
+  .object({
+    data: z
+      .object({
+        items: z.array(
+          z
+            .object({
+              orderIntentCheckId: z
+                .string()
+                .regex(/^prt_[0-9A-HJKMNP-TV-Z]{26}$/),
+              strategyId: z.string().regex(/^str_[0-9A-HJKMNP-TV-Z]{26}$/),
+              modelVersionId: z
+                .string()
+                .regex(/^mdl_[0-9A-HJKMNP-TV-Z]{26}$/)
+                .optional(),
+              symbol: z.string(),
+              side: z.enum(['buy', 'sell']),
+              qty: z.number(),
+              price: z.number().optional(),
+              result: z.enum(['allow', 'reject']),
+              reasons: z.array(z.string()).optional(),
+              envelopeRuleHit: z.string().optional(),
+              createdAt: z.string().datetime({ offset: true }),
+              updatedAt: z.string().datetime({ offset: true }).optional(),
+            })
+            .passthrough()
+        ),
+        nextCursor: z.string().optional(),
+      })
+      .passthrough(),
+    meta: z
+      .object({
+        requestId: z.string().uuid(),
+        correlationId: z.string(),
+        generatedAt: z.string().datetime({ offset: true }),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+const OrderIntentCheckRequest = z
+  .object({
+    strategyId: z.string().regex(/^str_[0-9A-HJKMNP-TV-Z]{26}$/),
+    modelVersionId: z
+      .string()
+      .regex(/^mdl_[0-9A-HJKMNP-TV-Z]{26}$/)
+      .optional(),
+    symbol: z.string(),
+    side: z.enum(['buy', 'sell']),
+    qty: z.number(),
+    price: z.number().optional(),
+    omsCorrelationId: z.string().optional(),
+  })
+  .passthrough();
+const OrderIntentCheckResponse = z
+  .object({
+    data: z
+      .object({
+        orderIntentCheckId: z.string().regex(/^prt_[0-9A-HJKMNP-TV-Z]{26}$/),
+        strategyId: z.string().regex(/^str_[0-9A-HJKMNP-TV-Z]{26}$/),
+        modelVersionId: z
+          .string()
+          .regex(/^mdl_[0-9A-HJKMNP-TV-Z]{26}$/)
+          .optional(),
+        symbol: z.string(),
+        side: z.enum(['buy', 'sell']),
+        qty: z.number(),
+        price: z.number().optional(),
+        result: z.enum(['allow', 'reject']),
+        reasons: z.array(z.string()).optional(),
+        envelopeRuleHit: z.string().optional(),
+        createdAt: z.string().datetime({ offset: true }),
+        updatedAt: z.string().datetime({ offset: true }).optional(),
+      })
+      .passthrough(),
+    meta: z
+      .object({
+        requestId: z.string().uuid(),
+        correlationId: z.string(),
+        generatedAt: z.string().datetime({ offset: true }),
+      })
+      .partial()
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+
+export const schemas: any = {
+  checkOrderIntent_Body,
+  StrategyId,
+  CheckResult,
+  Problem,
+  OrderIntentCheckId,
+  ModelVersionId,
+  Side,
+  OrderIntentCheck,
+  OrderIntentCheckListData,
+  ResponseMeta,
+  OrderIntentCheckListResponse,
+  OrderIntentCheckRequest,
+  OrderIntentCheckResponse,
+};
+
+const endpoints = makeApi([
+  {
+    method: 'post',
+    path: '/v1/pretrade/checks',
+    alias: 'checkOrderIntent',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'body',
+        type: 'Body',
+        schema: checkOrderIntent_Body,
+      },
+      {
+        name: 'Idempotency-Key',
+        type: 'Header',
+        schema: z.string().min(1).max(128),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            orderIntentCheckId: z
+              .string()
+              .regex(/^prt_[0-9A-HJKMNP-TV-Z]{26}$/),
+            strategyId: z.string().regex(/^str_[0-9A-HJKMNP-TV-Z]{26}$/),
+            modelVersionId: z
+              .string()
+              .regex(/^mdl_[0-9A-HJKMNP-TV-Z]{26}$/)
+              .optional(),
+            symbol: z.string(),
+            side: z.enum(['buy', 'sell']),
+            qty: z.number(),
+            price: z.number().optional(),
+            result: z.enum(['allow', 'reject']),
+            reasons: z.array(z.string()).optional(),
+            envelopeRuleHit: z.string().optional(),
+            createdAt: z.string().datetime({ offset: true }),
+            updatedAt: z.string().datetime({ offset: true }).optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 422,
+        description: `Semantically invalid request (e.g. PACK_EMPTY)`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'get',
+    path: '/v1/pretrade/checks',
+    alias: 'listOrderIntentChecks',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'cursor',
+        type: 'Query',
+        schema: z.string().optional(),
+      },
+      {
+        name: 'limit',
+        type: 'Query',
+        schema: z.number().int().gte(1).lte(200).optional().default(50),
+      },
+      {
+        name: 'strategyId',
+        type: 'Query',
+        schema: z
+          .string()
+          .regex(/^str_[0-9A-HJKMNP-TV-Z]{26}$/)
+          .optional(),
+      },
+      {
+        name: 'result',
+        type: 'Query',
+        schema: z.enum(['allow', 'reject']).optional(),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            items: z.array(
+              z
+                .object({
+                  orderIntentCheckId: z
+                    .string()
+                    .regex(/^prt_[0-9A-HJKMNP-TV-Z]{26}$/),
+                  strategyId: z.string().regex(/^str_[0-9A-HJKMNP-TV-Z]{26}$/),
+                  modelVersionId: z
+                    .string()
+                    .regex(/^mdl_[0-9A-HJKMNP-TV-Z]{26}$/)
+                    .optional(),
+                  symbol: z.string(),
+                  side: z.enum(['buy', 'sell']),
+                  qty: z.number(),
+                  price: z.number().optional(),
+                  result: z.enum(['allow', 'reject']),
+                  reasons: z.array(z.string()).optional(),
+                  envelopeRuleHit: z.string().optional(),
+                  createdAt: z.string().datetime({ offset: true }),
+                  updatedAt: z.string().datetime({ offset: true }).optional(),
+                })
+                .passthrough()
+            ),
+            nextCursor: z.string().optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+  {
+    method: 'get',
+    path: '/v1/pretrade/checks/:orderIntentCheckId',
+    alias: 'getOrderIntentCheck',
+    requestFormat: 'json',
+    parameters: [
+      {
+        name: 'orderIntentCheckId',
+        type: 'Path',
+        schema: z.string().regex(/^prt_[0-9A-HJKMNP-TV-Z]{26}$/),
+      },
+    ],
+    response: z
+      .object({
+        data: z
+          .object({
+            orderIntentCheckId: z
+              .string()
+              .regex(/^prt_[0-9A-HJKMNP-TV-Z]{26}$/),
+            strategyId: z.string().regex(/^str_[0-9A-HJKMNP-TV-Z]{26}$/),
+            modelVersionId: z
+              .string()
+              .regex(/^mdl_[0-9A-HJKMNP-TV-Z]{26}$/)
+              .optional(),
+            symbol: z.string(),
+            side: z.enum(['buy', 'sell']),
+            qty: z.number(),
+            price: z.number().optional(),
+            result: z.enum(['allow', 'reject']),
+            reasons: z.array(z.string()).optional(),
+            envelopeRuleHit: z.string().optional(),
+            createdAt: z.string().datetime({ offset: true }),
+            updatedAt: z.string().datetime({ offset: true }).optional(),
+          })
+          .passthrough(),
+        meta: z
+          .object({
+            requestId: z.string().uuid(),
+            correlationId: z.string(),
+            generatedAt: z.string().datetime({ offset: true }),
+          })
+          .partial()
+          .passthrough()
+          .optional(),
+      })
+      .passthrough(),
+    errors: [
+      {
+        status: 401,
+        description: `Missing or invalid API key`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+      {
+        status: 404,
+        description: `Resource not found`,
+        schema: z
+          .object({
+            type: z.string().url(),
+            title: z.string(),
+            status: z.number().int(),
+            detail: z.string(),
+            instance: z.string().url(),
+            code: z.string(),
+          })
+          .partial()
+          .passthrough(),
+      },
+    ],
+  },
+]);
+
+export const api: any = new Zodios(
+  'https://api.ddd-codegen-starter.local/v1',
+  endpoints
+);
+
+export function createApiClient(baseUrl: string, options?: ZodiosOptions): any {
+  return new Zodios(baseUrl, endpoints, options);
+}

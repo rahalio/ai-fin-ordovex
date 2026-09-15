@@ -1,0 +1,85 @@
+openapi: 3.1.0
+info:
+  title: Ordovex health schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    ControlPlaneHealthId:
+      type: string
+      pattern: '^hlt_[0-9A-HJKMNP-TV-Z]{26}$'
+    HealthStatus:
+      type: string
+      enum: [healthy, degraded, critical]
+    ControlPlaneHealth:
+      type: object
+      required: [controlPlaneHealthId, status, decisionLatencyP99Ms, killSuccessRate, generatedAt, createdAt]
+      properties:
+        controlPlaneHealthId:
+          $ref: '#/components/schemas/ControlPlaneHealthId'
+        status:
+          $ref: '#/components/schemas/HealthStatus'
+        decisionLatencyP99Ms:
+          type: number
+        killSuccessRate:
+          type: number
+        gatewayHeartbeatsOk:
+          type: integer
+        gatewayHeartbeatsTotal:
+          type: integer
+        degradeMode:
+          type: string
+        generatedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    GatewayHeartbeat:
+      type: object
+      required: [gatewayId, lastSeenAt, ok, createdAt]
+      properties:
+        gatewayId:
+          type: string
+        lastSeenAt:
+          type: string
+          format: date-time
+        ok:
+          type: boolean
+        latencyMs:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ControlPlaneHealthResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/ControlPlaneHealth'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    GatewayHeartbeatListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/GatewayHeartbeat'
+        nextCursor:
+          type: string
+    GatewayHeartbeatListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/GatewayHeartbeatListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

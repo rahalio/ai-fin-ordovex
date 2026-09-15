@@ -1,0 +1,110 @@
+openapi: 3.1.0
+info:
+  title: Ordovex certifications schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    CertificationId:
+      type: string
+      pattern: '^crt_[0-9A-HJKMNP-TV-Z]{26}$'
+    StrategyId:
+      type: string
+      pattern: '^str_[0-9A-HJKMNP-TV-Z]{26}$'
+    ModelVersionId:
+      type: string
+      pattern: '^mdl_[0-9A-HJKMNP-TV-Z]{26}$'
+    EvidenceStatus:
+      type: string
+      enum: [pending, accepted, rejected]
+    CertificationStatus:
+      type: string
+      enum: [pending, certified, rejected]
+    RiskClass:
+      type: string
+      enum: [low, medium, high]
+    Certification:
+      type: object
+      required: [certificationId, strategyId, modelVersionId, evidenceStatus, status, riskClass, createdAt]
+      properties:
+        certificationId:
+          $ref: '#/components/schemas/CertificationId'
+        strategyId:
+          $ref: '#/components/schemas/StrategyId'
+        modelVersionId:
+          $ref: '#/components/schemas/ModelVersionId'
+        evidenceStatus:
+          $ref: '#/components/schemas/EvidenceStatus'
+        evidenceUri:
+          type: string
+          format: uri
+        riskClass:
+          $ref: '#/components/schemas/RiskClass'
+        approvedBy:
+          $ref: ./common/primitives.yaml#/components/schemas/UserId
+        rejectReasons:
+          type: array
+          items:
+            type: string
+        status:
+          $ref: '#/components/schemas/CertificationStatus'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CertificationCreate:
+      type: object
+      required: [strategyId, modelVersionId, riskClass]
+      properties:
+        strategyId:
+          $ref: '#/components/schemas/StrategyId'
+        modelVersionId:
+          $ref: '#/components/schemas/ModelVersionId'
+        evidenceUri:
+          type: string
+          format: uri
+        riskClass:
+          $ref: '#/components/schemas/RiskClass'
+        requestedLimitPackageId:
+          type: string
+    CertificationDecision:
+      type: object
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          enum: [approve, reject]
+        rejectReasons:
+          type: array
+          items:
+            type: string
+        notes:
+          type: string
+    CertificationResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/Certification'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    CertificationListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Certification'
+        nextCursor:
+          type: string
+    CertificationListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/CertificationListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta

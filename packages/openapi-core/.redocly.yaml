@@ -1,0 +1,40 @@
+apis:
+  identity:
+    root: src/identity.yaml
+  strategies:
+    root: src/strategies.yaml
+  certifications:
+    root: src/certifications.yaml
+  limits:
+    root: src/limits.yaml
+  pretrade:
+    root: src/pretrade.yaml
+  telemetry:
+    root: src/telemetry.yaml
+  kills:
+    root: src/kills.yaml
+  concentration:
+    root: src/concentration.yaml
+  incidents:
+    root: src/incidents.yaml
+  health:
+    root: src/health.yaml
+
+extends:
+  - recommended
+
+rules:
+  no-unused-components: off
+  operation-4xx-response: warn
+  info-license: off
+  info-license-url: off
+  tag-description: off
+  operation-operationId: error
+  operation-summary: off
+  info-license-strict: off
+  no-invalid-media-type-examples: off
+
+theme:
+  openapi:
+    generateCodeSamples:
+      languages: []

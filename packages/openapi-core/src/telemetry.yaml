@@ -1,0 +1,168 @@
+openapi: 3.1.0
+info:
+  title: Ordovex Telemetry API
+  version: 0.1.0
+  description: Intraday telemetry ingest and automatic breach actions (BR-5).
+  x-domain: tlm
+  license:
+    name: Proprietary
+servers:
+  - url: https://api.ordovex.local
+security:
+  - apiKey: []
+  - bearerAuth: []
+tags:
+  - name: Telemetry
+  - name: Breaches
+paths:
+  /v1/telemetry:
+    post:
+      operationId: ingestTelemetry
+      tags: [Telemetry]
+      security:
+        - apiKey: []
+      x-repository: TelemetrySnapshot
+      x-dynamodb:
+        entityType: TELEMETRY_SNAPSHOT
+        pkPatternTemplate: "TELEMETRY#${telemetrySnapshotId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./telemetry.schemas.yaml#/components/schemas/TelemetrySnapshotCreate
+      responses:
+        '201':
+          description: Ingested
+          content:
+            application/json:
+              schema:
+                $ref: ./telemetry.schemas.yaml#/components/schemas/TelemetrySnapshotResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '422':
+          $ref: ./common/responses.yaml#/components/responses/UnprocessableEntity
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+    get:
+      operationId: listTelemetrySnapshots
+      tags: [Telemetry]
+      x-repository: TelemetrySnapshot
+      x-dynamodb:
+        entityType: TELEMETRY_SNAPSHOT
+        pkPatternTemplate: "TELEMETRY#${telemetrySnapshotId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+        filterFields: [strategyId]
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: strategyId
+          in: query
+          schema:
+            $ref: ./telemetry.schemas.yaml#/components/schemas/StrategyId
+      responses:
+        '200':
+          description: Snapshots
+          content:
+            application/json:
+              schema:
+                $ref: ./telemetry.schemas.yaml#/components/schemas/TelemetrySnapshotListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/telemetry/breaches:
+    get:
+      operationId: listBreachActions
+      tags: [Breaches]
+      x-repository: BreachAction
+      x-dynamodb:
+        entityType: BREACH_ACTION
+        pkPatternTemplate: "BREACH#${breachActionId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+        filterFields: [strategyId, status, kind]
+      parameters:
+        - $ref: ./common/parameters.yaml#/components/parameters/Cursor
+        - $ref: ./common/parameters.yaml#/components/parameters/Limit
+        - name: strategyId
+          in: query
+          schema:
+            $ref: ./telemetry.schemas.yaml#/components/schemas/StrategyId
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [triggered, acknowledged, cleared]
+      responses:
+        '200':
+          description: Breaches
+          content:
+            application/json:
+              schema:
+                $ref: ./telemetry.schemas.yaml#/components/schemas/BreachActionListResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+  /v1/telemetry/breaches/{breachActionId}/acknowledge:
+    post:
+      operationId: acknowledgeBreachAction
+      tags: [Breaches]
+      x-repository: BreachAction
+      x-dynamodb:
+        entityType: BREACH_ACTION
+        pkPatternTemplate: "BREACH#${breachActionId}"
+        skPatternTemplate: METADATA
+        pkPattern: entity
+        createdAtField: createdAt
+        updatedAtField: updatedAt
+        softDeleteEnabled: false
+      parameters:
+        - name: breachActionId
+          in: path
+          required: true
+          schema:
+            $ref: ./telemetry.schemas.yaml#/components/schemas/BreachActionId
+        - $ref: ./common/parameters.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: ./telemetry.schemas.yaml#/components/schemas/BreachAcknowledge
+      responses:
+        '200':
+          description: Acknowledged
+          content:
+            application/json:
+              schema:
+                $ref: ./telemetry.schemas.yaml#/components/schemas/BreachActionResponse
+        '401':
+          $ref: ./common/responses.yaml#/components/responses/Unauthorized
+        '404':
+          $ref: ./common/responses.yaml#/components/responses/NotFound
+        default:
+          $ref: ./common/responses.yaml#/components/responses/Problem
+
+components:
+  securitySchemes:
+    apiKey:
+      $ref: ./common/security.yaml#/components/securitySchemes/apiKey
+    bearerAuth:
+      $ref: ./common/security.yaml#/components/securitySchemes/bearerAuth

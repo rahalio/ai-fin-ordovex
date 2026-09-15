@@ -1,0 +1,115 @@
+openapi: 3.1.0
+info:
+  title: Ordovex concentration schemas
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    ConcentrationSnapshotId:
+      type: string
+      pattern: '^cnc_[0-9A-HJKMNP-TV-Z]{26}$'
+    SignalFamily:
+      type: string
+    ConcentrationCell:
+      type: object
+      required: [signalFamily, notional, strategyCount]
+      properties:
+        signalFamily:
+          $ref: '#/components/schemas/SignalFamily'
+        notional:
+          type: number
+        strategyCount:
+          type: integer
+        correlatedStrategyIds:
+          type: array
+          items:
+            type: string
+    ConcentrationSnapshot:
+      type: object
+      required: [concentrationSnapshotId, cells, generatedAt, createdAt]
+      properties:
+        concentrationSnapshotId:
+          $ref: '#/components/schemas/ConcentrationSnapshotId'
+        cells:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConcentrationCell'
+        coverageGap:
+          type: boolean
+        generatedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ConcentrationAlert:
+      type: object
+      required: [alertId, signalFamily, notional, status, createdAt]
+      properties:
+        alertId:
+          type: string
+          pattern: '^cna_[0-9A-HJKMNP-TV-Z]{26}$'
+        signalFamily:
+          $ref: '#/components/schemas/SignalFamily'
+        notional:
+          type: number
+        deskId:
+          type: string
+        status:
+          type: string
+          enum: [open, notified, closed]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ConcentrationAlertCreate:
+      type: object
+      required: [signalFamily, notional]
+      properties:
+        signalFamily:
+          $ref: '#/components/schemas/SignalFamily'
+        notional:
+          type: number
+        deskId:
+          type: string
+        message:
+          type: string
+    ConcentrationSnapshotResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/ConcentrationSnapshot'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    ConcentrationAlertResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/ConcentrationAlert'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
+    ConcentrationAlertListData:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConcentrationAlert'
+        nextCursor:
+          type: string
+    ConcentrationAlertListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/ConcentrationAlertListData'
+        meta:
+          $ref: ./common/envelopes.yaml#/components/schemas/ResponseMeta
